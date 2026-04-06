@@ -1,6 +1,6 @@
-﻿using ECommerceApi.Enums;
+﻿using Eshop.Domain.Enums;
 
-namespace ECommerceApi.Entity
+namespace Eshop.Domain.Entities
 {
     public class Payment
     {

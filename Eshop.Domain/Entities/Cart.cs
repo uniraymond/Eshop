@@ -1,4 +1,4 @@
-﻿namespace ECommerceApi.Entity
+﻿namespace Eshop.Domain.Entities
 {
     public class Cart : BaseEntity
     {
