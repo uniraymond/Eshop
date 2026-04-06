@@ -1,4 +1,4 @@
-﻿using ECommerceApi.Entity;
+﻿using Eshop.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using System.Data;
 
