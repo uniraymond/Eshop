@@ -1,4 +1,4 @@
-﻿namespace ECommerceApi.Enums
+﻿namespace Eshop.Domain.Enums
 {
     public enum OrderStatus
     {
