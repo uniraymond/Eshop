@@ -6,5 +6,9 @@ namespace Eshop.Application.Common.Interfaces
     {
         Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken = default);
         Task AddAsync(User user, CancellationToken cancellationToken = default);
+
+        Task<User?> GetUserWithRolesByEmailAsync(string email);
+
+        Task AddRefreshTokenAsync(RefreshToken refreshToken, CancellationToken cancellationToken = default);
     }
 }

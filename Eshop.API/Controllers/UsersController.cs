@@ -1,4 +1,5 @@
-﻿using Eshop.Application.Common.Models;
+﻿using Eshop.Application.Auth.Contracts.Requests;
+using Eshop.Application.Common.Models;
 using Eshop.Application.Users.Contracts.Requests;
 using Eshop.Application.Users.Interfaces;
 using Microsoft.AspNetCore.Mvc;
@@ -47,6 +48,26 @@ namespace Eshop.API.Controllers
 
             var result = await _userService.LoginAsync(request);
             return Ok(ApiResponse<object>.Ok(result, "Login Success."));
+        }
+
+        [HttpPost("refresh-token")]
+        public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequest request)
+        {
+            if (string.IsNullOrWhiteSpace(request.RefreshToken))
+                return BadRequest(ApiResponse<object>.Fail("RefreshToken is required."));
+
+            var result = await _userService.RefreshTokenAsync(request);
+            return Ok(ApiResponse<object>.Ok(result, "Token refreshed successfully."));
+        }
+
+        [HttpPost("revoke-refresh-token")]
+        public async Task<IActionResult> RevokeRefreshToken([FromBody] RevokeRefreshTokenRequest request)
+        {
+            if (string.IsNullOrWhiteSpace(request.RefreshToken))
+                return BadRequest(ApiResponse<object>.Fail("RefreshToken is required."));
+
+            await _userService.RevokeRefreshTokenAsync(request.RefreshToken);
+            return Ok(value: ApiResponse<object>.Ok(null, "Refresh token revoked successfully."));
         }
     }
 }

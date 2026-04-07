@@ -1,4 +1,6 @@
-﻿using Eshop.Application.Common.Interfaces;
+﻿using Eshop.Application.Auth.Interfaces;
+using Eshop.Application.Common.Interfaces;
+using Eshop.Infrastructure.Authentication;
 using Eshop.Infrastructure.Data;
 using Eshop.Infrastructure.Repositories;
 using Eshop.Infrastructure.Security;
@@ -17,8 +19,9 @@ namespace Eshop.Infrastructure.DependencyInjection
             services.AddDbContext<AppDbContext>(options =>
                 options.UseNpgsql(connectionString));
 
-            services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<IPasswordHasher, PasswordHasher>();
+            services.AddScoped<IUserRepository, UserRepository>();
+            services.AddScoped<ITokenService, TokenService>();
 
             return services;
         }
