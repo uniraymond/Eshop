@@ -1,0 +1,20 @@
+/**
+	* 主要是做request和response的验证，和一些公共的interface and service
+	* 这里的service是做一些技术手段的，
+	* 比如说：
+	分页，排序，过滤等一些公共的service
+	用户注册
+	登录
+	下单
+	支付前校验
+	商品搜索
+	刷新 token
+	* 而放入application层的service是一些业务相关的service
+	比如说：
+	生成 JWT
+	发邮件
+	存数据库
+	调 Redis
+	调 Stripe
+	上传文件到 S3
+	*/

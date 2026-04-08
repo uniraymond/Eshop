@@ -2,6 +2,7 @@
 using Eshop.Application.Common.Models;
 using Eshop.Application.Users.Contracts.Requests;
 using Eshop.Application.Users.Interfaces;
+using Eshop.Application.Validators;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -24,14 +25,7 @@ namespace Eshop.API.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterRequest request)
         {
-            if (string.IsNullOrWhiteSpace(request.UserName))
-                return BadRequest(ApiResponse<object>.Fail("UserName is required."));
-
-            if (string.IsNullOrWhiteSpace(request.Email))
-                return BadRequest(ApiResponse<object>.Fail("Email is required."));
-
-            if (string.IsNullOrWhiteSpace(request.Password))
-                return BadRequest(ApiResponse<object>.Fail("Password is required."));
+            UserRequestValidator.ValidateRegister(request);
 
             var result = await _userService.RegisterAsync(request);
 
@@ -41,11 +35,7 @@ namespace Eshop.API.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
-            if (string.IsNullOrWhiteSpace(request.Email))
-                return BadRequest(ApiResponse<object>.Fail("Email is required."));
-
-            if (string.IsNullOrWhiteSpace(request.Password))
-                return BadRequest(ApiResponse<object>.Fail("Password is required."));
+            UserRequestValidator.ValidateLogin(request);
 
             var result = await _userService.LoginAsync(request);
             return Ok(ApiResponse<object>.Ok(result, "Login Success."));
@@ -54,8 +44,7 @@ namespace Eshop.API.Controllers
         [HttpPost("refresh-token")]
         public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequest request)
         {
-            if (string.IsNullOrWhiteSpace(request.RefreshToken))
-                return BadRequest(ApiResponse<object>.Fail("RefreshToken is required."));
+            UserRequestValidator.ValidateRefreshToken(request);
 
             var result = await _userService.RefreshTokenAsync(request);
             return Ok(ApiResponse<object>.Ok(result, "Token refreshed successfully."));
@@ -64,8 +53,7 @@ namespace Eshop.API.Controllers
         [HttpPost("revoke-refresh-token")]
         public async Task<IActionResult> RevokeRefreshToken([FromBody] RevokeRefreshTokenRequest request)
         {
-            if (string.IsNullOrWhiteSpace(request.RefreshToken))
-                return BadRequest(ApiResponse<object>.Fail("RefreshToken is required."));
+            UserRequestValidator.ValidateRevokeRefreshToken(request);
 
             await _userService.RevokeRefreshTokenAsync(request.RefreshToken);
             return Ok(value: ApiResponse<object>.Ok(null, "Refresh token revoked successfully."));

@@ -6,6 +6,7 @@ using Eshop.Application.Users.Interfaces;
 using Eshop.Application.Auth.Contracts.Responses;
 using Eshop.Application.Auth.Contracts.Requests;
 using Eshop.Application.Auth.Interfaces;
+using Eshop.Application.Common.Exceptions;
 
 namespace Eshop.Application.Users.Services
 {
@@ -32,6 +33,38 @@ namespace Eshop.Application.Users.Services
             _currentUserService = currentUserService;
         }
 
+        public async Task<UserResponse> RegisterAsync(RegisterRequest request)
+        {
+            var normalizedEmail = request.Email.Trim().ToLower();
+
+            var existingUser = await _userRepository.GetByEmailAsync(normalizedEmail);
+
+            if (existingUser != null)
+            {
+                throw new BussinessException("Email already exists.");
+            }
+
+            var user = new User
+            {
+                Id = Guid.NewGuid(),
+                Email = normalizedEmail,
+                UserName = request.UserName.Trim(),
+                PasswordHash = _passwordHasher.Hash(request.Password),
+                PhoneNumber = request.PhoneNumber,
+                IsActive = true,
+            };
+
+            await _userRepository.AddAsync(user);
+
+            return new UserResponse
+            {
+                Id = user.Id,
+                Email = user.Email,
+                UserName = user.UserName,
+                PhoneNumber = user.PhoneNumber
+            };
+        }
+
         public async Task<TokenResponse> LoginAsync(LoginRequest request)
         {
             var normalizedEmail = request.Email.Trim().ToLower();
@@ -40,18 +73,18 @@ namespace Eshop.Application.Users.Services
 
             if (user is null)
             {
-                throw new Exception("Invalid email or password.");
+                throw new UnauthorizedException("Invalid email or password.");
             }
 
             if (!user.IsActive)
             {
-                throw new Exception("User account is inactive.");
+                throw new BussinessException("User account is inactive.");
             }
 
             var isPasswordValid = _passwordHasher.Verify(request.Password, user.PasswordHash);
             if (!isPasswordValid)
             {
-                throw new Exception("Invalid email or password.");
+                throw new UnauthorizedException("Invalid email or password.");
             }
 
             var roles = user.UserRoles.Select(ur => ur.Role.Name).ToList();
@@ -89,22 +122,22 @@ namespace Eshop.Application.Users.Services
 
             if (refreshToken is null)
             {
-                throw new Exception("Refresh Token not found.");
+                throw new NotFoundException("Refresh Token not found.");
             }
 
             if (refreshToken.IsRevoked)
             {
-                throw new Exception("Refresh Token has been revoked.");
+                throw new BussinessException("Refresh Token has been revoked.");
             }
 
             if (refreshToken.ExpiresAt < DateTime.UtcNow)
             {
-                throw new Exception("Refresh Token has expired.");
+                throw new BussinessException("Refresh Token has expired.");
             }
 
             if (!refreshToken.User.IsActive)
             {
-                throw new Exception("User account is inactive.");
+                throw new BussinessException("User account is inactive.");
             }
 
             var roles = refreshToken.User.UserRoles
@@ -141,45 +174,13 @@ namespace Eshop.Application.Users.Services
             };
         }
 
-        public async Task<UserResponse> RegisterAsync(RegisterRequest request)
-        {
-            var normalizedEmail = request.Email.Trim().ToLower();
-
-            var existingUser = await _userRepository.GetByEmailAsync(normalizedEmail);
-
-            if (existingUser != null)
-            {
-                throw new Exception("Email already exists.");
-            }
-
-            var user = new User
-            {
-                Id = Guid.NewGuid(),
-                Email = normalizedEmail,
-                UserName = request.UserName.Trim(),
-                PasswordHash = _passwordHasher.Hash(request.Password),
-                PhoneNumber = request.PhoneNumber,
-                IsActive = true,
-            };
-
-            await _userRepository.AddAsync(user);
-
-            return new UserResponse
-            {
-                Id = user.Id,
-                Email = user.Email,
-                UserName = user.UserName,
-                PhoneNumber = user.PhoneNumber
-            };
-        }
-
         public async Task RevokeRefreshTokenAsync(string refreshToken)
         {
             var token = await _tokenRepository.GetRefreshTokenAsync(refreshToken);
 
             if (token is null)
             {
-                throw new Exception("Refresh Token not found.");
+                throw new NotFoundException("Refresh Token not found.");
             }
 
             if (token.IsRevoked)
@@ -197,7 +198,7 @@ namespace Eshop.Application.Users.Services
         {
             if (!_currentUserService.IsAuthenticated || _currentUserService.UserId is null)
             {
-                throw new Exception("User is not authenticated.");
+                throw new UnauthorizedException("User is not authenticated.");
             }
 
             var userId = _currentUserService.UserId.Value;
@@ -206,7 +207,7 @@ namespace Eshop.Application.Users.Services
 
             if (user is null)
             {
-                throw new Exception("User not found.");
+                throw new NotFoundException("User not found.");
             }
             return new CurrentUserResponse
             {
