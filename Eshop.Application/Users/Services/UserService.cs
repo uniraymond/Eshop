@@ -15,18 +15,21 @@ namespace Eshop.Application.Users.Services
         public readonly IPasswordHasher _passwordHasher;
         private readonly ITokenService _tokenService;
         private readonly ITokenRepository _tokenRepository;
+        private readonly ICurrentUserService _currentUserService;
 
         public UserService(
-            IUserRepository userRepository, 
+            IUserRepository userRepository,
             IPasswordHasher passwordHasher,
             ITokenService tokenService,
-            ITokenRepository tokenRepository
+            ITokenRepository tokenRepository,
+            ICurrentUserService currentUserService
         )
         {
             _userRepository = userRepository;
             _passwordHasher = passwordHasher;
             _tokenService = tokenService;
             _tokenRepository = tokenRepository;
+            _currentUserService = currentUserService;
         }
 
         public async Task<TokenResponse> LoginAsync(LoginRequest request)
@@ -188,6 +191,32 @@ namespace Eshop.Application.Users.Services
             token.RevokedAt = DateTime.UtcNow;
 
             await _tokenRepository.AddRefreshTokenAsync(token);
+        }
+
+        public async Task<CurrentUserResponse> GetCurrentUserAsync()
+        {
+            if (!_currentUserService.IsAuthenticated || _currentUserService.UserId is null)
+            {
+                throw new Exception("User is not authenticated.");
+            }
+
+            var userId = _currentUserService.UserId.Value;
+
+            var user = await _userRepository.GetUserWithRolesByUserIdAsync(userId);
+
+            if (user is null)
+            {
+                throw new Exception("User not found.");
+            }
+            return new CurrentUserResponse
+            {
+                Id = user.Id,
+                UserName = user.UserName,
+                Email = user.Email,
+                PhoneNumber = user.PhoneNumber,
+                IsActive = user.IsActive,
+                Roles = user.UserRoles.Select(ur => ur.Role.Code).ToList()
+            };
         }
     }
 }

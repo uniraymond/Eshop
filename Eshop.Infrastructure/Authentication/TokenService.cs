@@ -34,6 +34,7 @@ namespace Eshop.Infrastructure.Authentication
                 claims.Add(new Claim(ClaimTypes.Role, role));
             }
 
+            Console.WriteLine($"SecretKey: {_jwtOptions.SecretKey}");
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtOptions.SecretKey));
             var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 

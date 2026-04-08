@@ -11,5 +11,6 @@ namespace Eshop.Application.Users.Interfaces
         public Task<TokenResponse> LoginAsync(LoginRequest request);
         public Task<TokenResponse> RefreshTokenAsync(RefreshTokenRequest request);
         public Task RevokeRefreshTokenAsync(string refreshToken);
+        public Task<CurrentUserResponse> GetCurrentUserAsync();
     }
 }

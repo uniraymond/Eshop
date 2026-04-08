@@ -11,12 +11,10 @@ namespace Eshop.Infrastructure.Repositories
     internal class TokenRepoitory : ITokenRepository
     {
         private readonly AppDbContext _dbContext;
-        private readonly ITokenRepository _tokenRepository;
 
-        public TokenRepoitory(AppDbContext dbContext, ITokenRepository tokenRepository)
+        public TokenRepoitory(AppDbContext dbContext)
         {
             _dbContext = dbContext;
-            _tokenRepository = tokenRepository;
         }
 
         public async Task<RefreshToken?> GetRefreshTokenWithUserAsync(string RefreshToken)
@@ -40,4 +38,5 @@ namespace Eshop.Infrastructure.Repositories
         {
             return await _dbContext.RefreshTokens.FirstOrDefaultAsync(x => x.Token == RefreshToken);
         }
+    }
 }

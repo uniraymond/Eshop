@@ -34,6 +34,15 @@ namespace Eshop.Infrastructure.Repositories
                 .FirstOrDefaultAsync(u => u.Email == email);
         }
 
+        public async Task<User?> GetUserWithRolesByUserIdAsync(Guid userId)
+        {
+            return await _dbContext.Users
+                .Include(u => u.UserRoles)
+                    .ThenInclude(ur => ur.Role)
+                .AsNoTracking()
+                .FirstOrDefaultAsync(u => u.Id == userId);
+        }
+
         public async Task AddRefreshTokenAsync(RefreshToken refreshToken, CancellationToken cancellationToken = default)
         {
             await _dbContext.RefreshTokens.AddAsync(refreshToken, cancellationToken);

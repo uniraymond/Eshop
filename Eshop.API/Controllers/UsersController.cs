@@ -2,6 +2,7 @@
 using Eshop.Application.Common.Models;
 using Eshop.Application.Users.Contracts.Requests;
 using Eshop.Application.Users.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
@@ -68,6 +69,14 @@ namespace Eshop.API.Controllers
 
             await _userService.RevokeRefreshTokenAsync(request.RefreshToken);
             return Ok(value: ApiResponse<object>.Ok(null, "Refresh token revoked successfully."));
+        }
+
+        [Authorize]
+        [HttpGet("me")]
+        public async Task<IActionResult> Me()
+        {
+            var result = await _userService.GetCurrentUserAsync();
+            return Ok(ApiResponse<object>.Ok(result, "Current user retrieved successfully."));
         }
     }
 }
