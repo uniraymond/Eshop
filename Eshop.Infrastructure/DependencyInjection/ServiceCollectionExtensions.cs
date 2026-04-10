@@ -22,7 +22,8 @@ namespace Eshop.Infrastructure.DependencyInjection
             services.AddScoped<IPasswordHasher, PasswordHasher>();
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<ITokenService, TokenService>();
-            services.AddScoped<ITokenRepository, TokenRepoitory>();
+            services.AddScoped<ITokenRepository, TokenRepository>();
+            services.AddScoped<IProductRepository, ProductRepository>();
 
             return services;
         }

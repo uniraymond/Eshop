@@ -2,7 +2,7 @@
 using Eshop.Application.Common.Models;
 using Eshop.Application.Users.Contracts.Requests;
 using Eshop.Application.Users.Interfaces;
-using Eshop.Application.Validators;
+using Eshop.Application.Users.Validators;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

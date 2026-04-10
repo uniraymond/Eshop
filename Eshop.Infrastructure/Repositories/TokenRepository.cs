@@ -8,11 +8,11 @@ using System.Text;
 
 namespace Eshop.Infrastructure.Repositories
 {
-    internal class TokenRepoitory : ITokenRepository
+    internal class TokenRepository : ITokenRepository
     {
         private readonly AppDbContext _dbContext;
 
-        public TokenRepoitory(AppDbContext dbContext)
+        public TokenRepository(AppDbContext dbContext)
         {
             _dbContext = dbContext;
         }

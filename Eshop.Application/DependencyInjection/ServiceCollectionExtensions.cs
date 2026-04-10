@@ -1,6 +1,8 @@
 ﻿
 
 using Eshop.Application.Common.Interfaces;
+using Eshop.Application.Products.Interfaces;
+using Eshop.Application.Products.Services;
 using Eshop.Application.Users.Interfaces;
 using Eshop.Application.Users.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -13,6 +15,8 @@ namespace Eshop.Application.DependencyInjection
         {
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<ICurrentUserService, CurrentUserService>();
+            services.AddScoped<IProductService, ProductService>();
+            services.AddScoped<ICategoryService, CategoryService>();
             return services;
         }
     }
