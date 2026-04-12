@@ -6,7 +6,7 @@ using System.Text;
 
 namespace Eshop.Application.Products.Validators
 {
-    public class ProductRequestValidator()
+    public static class ProductRequestValidator
     {
         public static void ValidateCreate(CreateProductRequest request)
         {

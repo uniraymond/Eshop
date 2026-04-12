@@ -1,13 +1,10 @@
 ﻿using Eshop.Application.Common.Exceptions;
-using Eshop.Application.Common.Interfaces;
 using Eshop.Application.Common.Models;
 using Eshop.Application.Products.Contracts.Requests;
 using Eshop.Application.Products.Contracts.Response;
 using Eshop.Application.Products.Interfaces;
 using Eshop.Domain.Entities;
-using System;
-using System.Collections.Generic;
-using System.Text;
+using Eshop.Domain.Repositories;
 
 namespace Eshop.Application.Products.Services
 {
@@ -150,11 +147,30 @@ namespace Eshop.Application.Products.Services
 
         public async Task<PagedResponse<ProductResponse>> GetPagedAsync(GetProductsRequest request)
         {
-            var (items, totalCount) = await _productRepository.GetProductByKeywordAsync(request);
+            var keyword = request.Keyword;
+            var categoryId = request.CategoryId;
+            var isActive = request.IsActive;
+            var pageNumber = request.PageNumber;
+            var pageSize = request.PageSize;
+
+            var (items, totalCount) = await _productRepository.GetProductByKeywordAsync(keyword, categoryId, isActive, pageNumber, pageSize);
+
+            var products = items.Select(p => new ProductResponse
+            {
+                Id = p.Id,
+                CategoryId = p.CategoryId,
+                CategoryName = p.Category.Name,
+                Name = p.Name,
+                Description = p.Description,
+                Price = p.Price,
+                StockQuantity = p.StockQuantity,
+                Sku = p.Sku,
+                IsActive = p.IsActive
+            }).ToList();
 
             return new PagedResponse<ProductResponse>
             {
-                Items = items,
+                Items = products,
                 TotalCount = totalCount,
                 PageNumber = request.PageNumber,
                 PageSize = request.PageSize

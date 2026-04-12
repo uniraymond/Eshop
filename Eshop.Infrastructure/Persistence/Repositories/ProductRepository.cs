@@ -1,14 +1,9 @@
-﻿using Eshop.Application.Common.Interfaces;
-using Eshop.Application.Products.Contracts.Requests;
-using Eshop.Application.Products.Contracts.Response;
-using Eshop.Domain.Entities;
+﻿using Eshop.Domain.Entities;
+using Eshop.Domain.Repositories;
 using Eshop.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
-namespace Eshop.Infrastructure.Repositories
+namespace Eshop.Infrastructure.Persistence.Repositories
 {
     public class ProductRepository : IProductRepository
     {
@@ -31,17 +26,11 @@ namespace Eshop.Infrastructure.Repositories
             return category;
         }
 
-        public async Task<List<CategoryResponse>> GetAllCategoriesAsync()
+        public async Task<IReadOnlyList<Category>> GetAllCategoriesAsync()
         {
             return await _dbContext.Categories
                 .AsNoTracking()
                 .OrderBy(c => c.Name)
-                .Select(c => new CategoryResponse
-                {
-                    Id = c.Id,
-                    Name = c.Name,
-                    Description = c.Description
-                })
                 .ToListAsync();
         }
 
@@ -96,52 +85,60 @@ namespace Eshop.Infrastructure.Repositories
                 .FirstOrDefaultAsync(p => p.Id == productId);
         }
 
-        public async Task<(List<ProductResponse> Items, int TotalCount)> GetProductByKeywordAsync(GetProductsRequest request)
+        public async Task<(List<Product> Items, int TotalCount)> GetProductByKeywordAsync(
+            string? keyword,
+            Guid? categoryId,
+            bool? isActive,
+            int pageNumber,
+            int pageSize
+            )
         {
             var query = _dbContext.Products
                 .AsNoTracking()
                 .Include(c => c.Category)
                 .AsQueryable();
 
-            if (!string.IsNullOrWhiteSpace(request.Keyword))
+            if (!string.IsNullOrWhiteSpace(keyword))
             {
-                var keyword = request.Keyword.Trim();
                 query = query.Where(p =>
                     p.Name.Contains(keyword) ||
                     p.Sku.Contains(keyword));
             }
 
-            if (request.CategoryId.HasValue)
+            if (categoryId is Guid id)
             {
-                query = query.Where(p => p.CategoryId == request.CategoryId.Value);
+                query = query.Where(p => p.CategoryId == id);
             }
 
-            if (request.IsActive.HasValue)
+            if (isActive is bool active)
             {
-                query = query.Where(p => p.IsActive == request.IsActive.Value);
+                query = query.Where(p => p.IsActive == active);
             }
 
             var totalCount = await query.CountAsync();
 
             var items = await query
                 .OrderByDescending(p => p.Name)
-                .Skip((request.PageNumber - 1) * request.PageSize)
-                .Take(request.PageSize)
-                .Select(p => new ProductResponse
-                {
-                    Id = p.Id,
-                    CategoryId = p.CategoryId,
-                    CategoryName = p.Category.Name,
-                    Name = p.Name,
-                    Description = p.Description,
-                    Price = p.Price,
-                    StockQuantity = p.StockQuantity,
-                    Sku = p.Sku,
-                    IsActive = p.IsActive
-                })
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
                 .ToListAsync();
 
             return (items, totalCount);
+        }
+
+        public async Task<List<Product>> GetByIdsAsync(IEnumerable<Guid> productIds)
+        {
+            var ids = productIds.ToList();
+
+            return await _dbContext.Products
+                .Where(p => ids.Contains(p.Id))
+                .ToListAsync();
+        }
+
+        public async Task UpdateRangeAsync(IEnumerable<Product> products)
+        {
+            _dbContext.Products.UpdateRange(products);
+            await _dbContext.SaveChangesAsync();
         }
     }
 }

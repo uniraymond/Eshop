@@ -1,6 +1,8 @@
-﻿
-
+﻿using Eshop.Application.Carts.Interfaces;
+using Eshop.Application.Carts.Services;
 using Eshop.Application.Common.Interfaces;
+using Eshop.Application.Orders.Interfaces;
+using Eshop.Application.Orders.Services;
 using Eshop.Application.Products.Interfaces;
 using Eshop.Application.Products.Services;
 using Eshop.Application.Users.Interfaces;
@@ -17,6 +19,9 @@ namespace Eshop.Application.DependencyInjection
             services.AddScoped<ICurrentUserService, CurrentUserService>();
             services.AddScoped<IProductService, ProductService>();
             services.AddScoped<ICategoryService, CategoryService>();
+            services.AddScoped<ICartService, CartService>();
+            services.AddScoped<IOrderService, OrderService>();
+
             return services;
         }
     }

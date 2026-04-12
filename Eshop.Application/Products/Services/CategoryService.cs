@@ -1,12 +1,9 @@
 ﻿using Eshop.Application.Common.Exceptions;
-using Eshop.Application.Common.Interfaces;
 using Eshop.Application.Products.Contracts.Requests;
 using Eshop.Application.Products.Contracts.Response;
 using Eshop.Application.Products.Interfaces;
 using Eshop.Domain.Entities;
-using System;
-using System.Collections.Generic;
-using System.Text;
+using Eshop.Domain.Repositories;
 
 namespace Eshop.Application.Products.Services
 {
@@ -50,7 +47,14 @@ namespace Eshop.Application.Products.Services
 
         public async Task<IReadOnlyList<CategoryResponse>> GetAllAsync()
         {
-            return await _productRepository.GetAllCategoriesAsync();
+            var categories = await _productRepository.GetAllCategoriesAsync();
+
+            return categories.Select(c => new CategoryResponse
+                {
+                    Id = c.Id,
+                    Name = c.Name,
+                    Description = c.Description
+                }).ToList();
         }
     }
 }

@@ -1,7 +1,10 @@
 ﻿using Eshop.Application.Auth.Interfaces;
+using Eshop.Application.Carts.Interfaces;
 using Eshop.Application.Common.Interfaces;
+using Eshop.Domain.Repositories;
 using Eshop.Infrastructure.Authentication;
 using Eshop.Infrastructure.Data;
+using Eshop.Infrastructure.Persistence.Repositories;
 using Eshop.Infrastructure.Repositories;
 using Eshop.Infrastructure.Security;
 using Microsoft.EntityFrameworkCore;
@@ -24,6 +27,9 @@ namespace Eshop.Infrastructure.DependencyInjection
             services.AddScoped<ITokenService, TokenService>();
             services.AddScoped<ITokenRepository, TokenRepository>();
             services.AddScoped<IProductRepository, ProductRepository>();
+            services.AddScoped<ICartRepository, CartRepository>();
+            services.AddScoped<IOrderRepository, OrderRepository>();
+            services.AddScoped<IUnitOfWork, UnitOfWork>();
 
             return services;
         }
