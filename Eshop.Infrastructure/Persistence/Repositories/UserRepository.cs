@@ -3,7 +3,7 @@ using Eshop.Application.Common.Interfaces;
 using Eshop.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
-namespace Eshop.Infrastructure.Repositories
+namespace Eshop.Infrastructure.Persistence.Repositories
 {
     public class UserRepository : IUserRepository
     {

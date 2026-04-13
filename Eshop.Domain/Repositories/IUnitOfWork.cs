@@ -7,8 +7,8 @@ namespace Eshop.Domain.Repositories
     public interface IUnitOfWork
     {
         Task BeginTransactionAsync();
-        Task CommitTransactionAsync();
-        Task RollbackTransactionAsync();
+        Task CommitAsync();
+        Task RollbackAsync();
         Task<int> SaveChangesAsync();
     }
 }

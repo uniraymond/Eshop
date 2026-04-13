@@ -5,7 +5,6 @@ using Eshop.Domain.Repositories;
 using Eshop.Infrastructure.Authentication;
 using Eshop.Infrastructure.Data;
 using Eshop.Infrastructure.Persistence.Repositories;
-using Eshop.Infrastructure.Repositories;
 using Eshop.Infrastructure.Security;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;

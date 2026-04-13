@@ -4,9 +4,9 @@ using System.Text;
 
 namespace Eshop.Application.Common.Exceptions
 {
-    public class BussinessException: Exception
+    public class BusinessException: Exception
     {
-        public BussinessException(string message) : base(message)
+        public BusinessException(string message) : base(message)
         {
 
         }

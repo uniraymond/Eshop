@@ -25,5 +25,20 @@ namespace Eshop.API.Controllers
             var result = await _orderService.CreateOrderAsync(request);
             return Ok(ApiResponse<object>.Ok(result, "Order created successfully."));
         }
+
+        [HttpGet("me")]
+        public async Task<IActionResult> GetMyOrders([FromBody] GetMyOrdersRequest request)
+        {
+            OrderRequestValidator.ValidateGetMyOrders(request);
+            var result = await _orderService.GetMyOrdersAsync(request);
+            return Ok(ApiResponse<object>.Ok(result));
+        }
+
+        [HttpGet("me/{orderId:guid}")]
+        public async Task<IActionResult> GetMyOrderById(Guid orderId)
+        {
+            var result = await _orderService.GetMyOrderByIdAsync(orderId);
+            return Ok(ApiResponse<object>.Ok(result));
+        }
     }
 }

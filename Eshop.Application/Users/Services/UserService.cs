@@ -41,7 +41,7 @@ namespace Eshop.Application.Users.Services
 
             if (existingUser != null)
             {
-                throw new BussinessException("Email already exists.");
+                throw new BusinessException("Email already exists.");
             }
 
             var user = new User
@@ -78,7 +78,7 @@ namespace Eshop.Application.Users.Services
 
             if (!user.IsActive)
             {
-                throw new BussinessException("User account is inactive.");
+                throw new BusinessException("User account is inactive.");
             }
 
             var isPasswordValid = _passwordHasher.Verify(request.Password, user.PasswordHash);
@@ -127,17 +127,17 @@ namespace Eshop.Application.Users.Services
 
             if (refreshToken.IsRevoked)
             {
-                throw new BussinessException("Refresh Token has been revoked.");
+                throw new BusinessException("Refresh Token has been revoked.");
             }
 
             if (refreshToken.ExpiresAt < DateTime.UtcNow)
             {
-                throw new BussinessException("Refresh Token has expired.");
+                throw new BusinessException("Refresh Token has expired.");
             }
 
             if (!refreshToken.User.IsActive)
             {
-                throw new BussinessException("User account is inactive.");
+                throw new BusinessException("User account is inactive.");
             }
 
             var roles = refreshToken.User.UserRoles

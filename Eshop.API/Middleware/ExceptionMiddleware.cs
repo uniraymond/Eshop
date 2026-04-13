@@ -55,9 +55,9 @@ namespace Eshop.API.Middleware
                     response.Message = notFoundException.Message;
                     break;
 
-                case BussinessException bussinessException:
+                case BusinessException businessException:
                     httpContext.Response.StatusCode = (int)HttpStatusCode.BadRequest;
-                    response.Message = bussinessException.Message;
+                    response.Message = businessException.Message;
                     break;
                 default:
                     httpContext.Response.StatusCode = (int)HttpStatusCode.InternalServerError;

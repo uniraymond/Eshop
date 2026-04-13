@@ -24,7 +24,7 @@ namespace Eshop.Application.Products.Services
 
             if (exists)
             {
-                throw new BussinessException("Category with the same name already exists.");
+                throw new BusinessException("Category with the same name already exists.");
             }
 
             var category = new Category

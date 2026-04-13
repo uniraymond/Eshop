@@ -36,7 +36,7 @@ namespace Eshop.Application.Carts.Services
 
             if (request.ProductId == Guid.Empty)
             {
-                throw new BussinessException("Invalid product ID.");
+                throw new BusinessException("Invalid product ID.");
             }
 
             var product = await _productRepository.GetProductByIdAsync(request.ProductId);
@@ -48,12 +48,12 @@ namespace Eshop.Application.Carts.Services
 
             if (!product.IsActive)
             {
-                throw new BussinessException("Product is not available for purchase.");
+                throw new BusinessException("Product is not available for purchase.");
             }
 
             if (product.StockQuantity < request.Quantity) 
             {
-                throw new BussinessException("Insufficient stock for the requested quantity.");
+                throw new BusinessException("Insufficient stock for the requested quantity.");
             }
 
             var cart = await _cartRepository.GetCartByUserId(userId);
@@ -89,7 +89,7 @@ namespace Eshop.Application.Carts.Services
 
                 if (product.StockQuantity < newQuantity)
                 {
-                    throw new BussinessException("Insufficient stock.");
+                    throw new BusinessException("Insufficient stock.");
                 }
 
                 existingItem.Quantity = newQuantity;
@@ -138,12 +138,12 @@ namespace Eshop.Application.Carts.Services
 
             if (!cartItem.Product.IsActive)
             {
-                throw new BussinessException("Product is inActived");
+                throw new BusinessException("Product is inActived");
             }
 
             if (cartItem.Product.StockQuantity < request.Quantity)
             {
-                throw new BussinessException("Insufficient stock");
+                throw new BusinessException("Insufficient stock");
             }
 
             cartItem.Quantity = request.Quantity;

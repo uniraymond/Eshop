@@ -32,7 +32,7 @@ namespace Eshop.Application.Products.Services
 
             if (skuExists)
             {
-                throw new BussinessException("SKU already exists.");
+                throw new BusinessException("SKU already exists.");
             }
 
             var product = new Product
@@ -85,7 +85,7 @@ namespace Eshop.Application.Products.Services
 
             if (skuExists)
             {
-                throw new BussinessException("Sku already exists");
+                throw new BusinessException("Sku already exists");
             }
 
             product.CategoryId = request.CategoryId;
