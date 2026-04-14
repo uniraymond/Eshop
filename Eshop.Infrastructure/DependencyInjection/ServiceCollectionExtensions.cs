@@ -29,6 +29,7 @@ namespace Eshop.Infrastructure.DependencyInjection
             services.AddScoped<ICartRepository, CartRepository>();
             services.AddScoped<IOrderRepository, OrderRepository>();
             services.AddScoped<IUnitOfWork, UnitOfWork>();
+            services.AddScoped<IPaymentRepository, PaymentRepository>();
 
             return services;
         }
