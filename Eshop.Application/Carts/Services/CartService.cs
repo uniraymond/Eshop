@@ -15,19 +15,20 @@ namespace Eshop.Application.Carts.Services
     {
         private readonly ICartRepository _cartRepository;
         private readonly IProductRepository _productRepository;
-        private readonly IUserRepository _userRepository;
         private readonly ICurrentUserService _currentUserService;
+        private readonly IUnitOfWork _unitOfWork;
+
         public CartService(
             ICartRepository cartRepository,
             IProductRepository productRepository,
-            IUserRepository userRepository,
-            ICurrentUserService currentUserService
+            ICurrentUserService currentUserService,
+            IUnitOfWork unitOfWork
         )
         {
             _cartRepository = cartRepository;
             _productRepository = productRepository;
-            _userRepository = userRepository;
             _currentUserService = currentUserService;
+            _unitOfWork = unitOfWork;
         }
 
         public async Task<CartResponse> AddToCartAsync(AddToCartRequest request)
@@ -56,7 +57,7 @@ namespace Eshop.Application.Carts.Services
                 throw new BusinessException("Insufficient stock for the requested quantity.");
             }
 
-            var cart = await _cartRepository.GetCartByUserId(userId);
+            var cart = await _cartRepository.GetByUserIdWithItemsAndProductsAsync(userId);
             
             if (cart is null)
             {
@@ -201,7 +202,7 @@ namespace Eshop.Application.Carts.Services
         {
             var userId = GetCurrentUserId();
 
-            var cart = await _cartRepository.GetCartByIdWithCartItemsProducts(userId);
+            var cart = await _cartRepository.GetByUserIdWithItemsAndProductsAsync(userId);
 
             if (cart is null)
             {

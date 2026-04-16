@@ -60,7 +60,7 @@ namespace Eshop.Application.Orders.Services
 
                 if (product.StockQuantity < cartItem.Quantity)
                 {
-                    throw new BusinessException($"Insfficient stock for product '{product.Name}'.");
+                    throw new BusinessException($"Insufficient stock for product '{product.Name}'.");
                 }
             }
 
