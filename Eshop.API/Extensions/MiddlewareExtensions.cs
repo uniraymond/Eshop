@@ -8,5 +8,10 @@ namespace Eshop.API.Extensions
         {
             return app.UseMiddleware<ExceptionMiddleware>();
         }
+
+        public static IApplicationBuilder UseRequestLoggingMiddleware(this IApplicationBuilder app)
+        {
+            return app.UseMiddleware<RequestLoggingMiddleware>();
+        }
     }
 }

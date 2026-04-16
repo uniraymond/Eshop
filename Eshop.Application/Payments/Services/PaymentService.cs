@@ -7,9 +7,7 @@ using Eshop.Application.Payments.Interfaces;
 using Eshop.Domain.Entities;
 using Eshop.Domain.Enums;
 using Eshop.Domain.Repositories;
-using System;
-using System.Collections.Generic;
-using System.Text;
+using Microsoft.Extensions.Logging;
 
 namespace Eshop.Application.Payments.Services
 {
@@ -19,19 +17,30 @@ namespace Eshop.Application.Payments.Services
         private readonly IOrderRepository _orderRepository;
         private readonly IPaymentRepository _paymentRepository;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly ILogger _logger;
 
-        public PaymentService(ICurrentUserService currentUserService, IOrderRepository orderRepository, IPaymentRepository paymentRepository, IUnitOfWork unitOfWork)
+        public PaymentService(
+            ICurrentUserService currentUserService,
+            IOrderRepository orderRepository,
+            IPaymentRepository paymentRepository,
+            IUnitOfWork unitOfWork,
+            ILogger logger)
         {
             _currentUserService = currentUserService;
             _orderRepository = orderRepository;
             _paymentRepository = paymentRepository;
             _unitOfWork = unitOfWork;
+            _logger = logger;
         }
 
         public async Task<PaymentResponse> CreatePaymentForMyOrderAsync(Guid orderId, CreatePaymentRequest request)
         {
             var userId = GetCurrentUserId();
             var order = await _orderRepository.GetByIdWithItemsForUserAsync(orderId, userId);
+            _logger.LogInformation(
+                "Creating payment for order {OrderId} by user {UserId}",
+                orderId,
+                userId);
             if (order is null)
             {
                 throw new NotFoundException("Order not found.");
@@ -43,6 +52,12 @@ namespace Eshop.Application.Payments.Services
             }
 
             if (request.Amount != order.TotalAmount) {
+
+                _logger.LogWarning(
+                    "Payment amount mismatch for order {OrderId}. Expected {ExpectedAmount}, Actual {ActualAmount}",
+                    order.Id,
+                    order.TotalAmount,
+                    request.Amount);
                 throw new BusinessException("Payment amount must match the order total amount.");
             }
 
@@ -78,12 +93,20 @@ namespace Eshop.Application.Payments.Services
                 await _unitOfWork.SaveChangesAsync();
                 await _unitOfWork.CommitAsync();
             }
-            catch
+            catch (Exception ex)
             {
                 await _unitOfWork.RollbackAsync();
+                _logger.LogError(
+                    ex,
+                    "Failed to create payment for order {OrderId}",
+                    orderId);
                 throw;
             }
-
+            _logger.LogInformation(
+                "Payment recorded successfully for order {OrderId}. PaymentStatus: {PaymentStatus}, TransactionId: {TransactionId}",
+                order.Id,
+                payment.Status,
+                payment.TransactionId);
             return new PaymentResponse
             {
                 Id = payment.Id,

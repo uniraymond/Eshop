@@ -1,5 +1,6 @@
 ﻿using Eshop.Application.Common.Exceptions;
 using Eshop.Application.Common.Models;
+using Serilog.Context;
 using System.Net;
 using System.Text.Json;
 
@@ -18,15 +19,25 @@ namespace Eshop.API.Middleware
 
         public async Task InvokeAsync(HttpContext httpContext)
         {
-            try
+            using (LogContext.PushProperty("TraceId", httpContext.TraceIdentifier))
             {
-                await _next(httpContext);
+                try
+                {
+                    await _next(httpContext);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(
+                        ex,
+                       "Unhandled exception occurred. Method: {Method}, Path: {Path}, TraceId: {TraceId}",
+                       httpContext.Request.Method,
+                       httpContext.Request.Path,
+                       httpContext.TraceIdentifier
+                       );
+                    await HandleExceptionAsync(httpContext, ex);
+                }
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Unhandled exception occurred while processing the request.");
-                await HandleExceptionAsync(httpContext, ex);
-            }
+            
         }
 
         private static async Task HandleExceptionAsync(HttpContext httpContext, Exception ex)
@@ -59,6 +70,7 @@ namespace Eshop.API.Middleware
                     httpContext.Response.StatusCode = (int)HttpStatusCode.BadRequest;
                     response.Message = businessException.Message;
                     break;
+
                 default:
                     httpContext.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
                     response.Message = "An unexpected error occurred. Please try again later.";

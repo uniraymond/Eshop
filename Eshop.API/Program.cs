@@ -7,90 +7,119 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
+using Serilog;
 using System.Reflection.Metadata;
 
-var builder = WebApplication.CreateBuilder(args);
+Log.Logger = new LoggerConfiguration()
+    .ReadFrom.Configuration(new ConfigurationBuilder()
+    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+    .Build())
+    .Enrich.FromLogContext()
+    .WriteTo.Console()
+    .CreateLogger();
 
-// Add services to the container.
+try
+{
+    var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-//builder.Services.AddOpenApi();
-
-builder.Services.AddEndpointsApiExplorer();
-
-builder.Services.AddHttpContextAccessor();
-builder.Services.AddApplication();
-builder.Services.AddInfrastructure(builder.Configuration);
-
-var jwtOptions = builder.Configuration
-    .GetSection(JwtOptions.SectionName)
-    .Get<JwtOptions>() ?? throw new InvalidOperationException("Jwt settings are missing.");
-
-builder.Services.Configure<JwtOptions>(
-    builder.Configuration.GetSection("Jwt"));
-
-Console.WriteLine("Environment: " + builder.Environment.EnvironmentName);
-Console.WriteLine("Jwt:SecretKey => " + builder.Configuration["Jwt:SecretKey"]);
-
-
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
+    builder.Host.UseSerilog((context, services, configuration) =>
     {
-        options.TokenValidationParameters = new TokenValidationParameters
+        configuration
+        .ReadFrom.Configuration(context.Configuration)
+        .ReadFrom.Services(services)
+        .Enrich.FromLogContext();
+    });
+
+    // Add services to the container.
+
+    builder.Services.AddControllers();
+    // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+    //builder.Services.AddOpenApi();
+
+    builder.Services.AddEndpointsApiExplorer();
+
+    builder.Services.AddHttpContextAccessor();
+    builder.Services.AddApplication();
+    builder.Services.AddInfrastructure(builder.Configuration);
+
+    var jwtOptions = builder.Configuration
+        .GetSection(JwtOptions.SectionName)
+        .Get<JwtOptions>() ?? throw new InvalidOperationException("Jwt settings are missing.");
+
+    builder.Services.Configure<JwtOptions>(
+        builder.Configuration.GetSection("Jwt"));
+
+    Console.WriteLine("Environment: " + builder.Environment.EnvironmentName);
+    Console.WriteLine("Jwt:SecretKey => " + builder.Configuration["Jwt:SecretKey"]);
+
+
+    builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+        .AddJwtBearer(options =>
         {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateIssuerSigningKey = true,
-            ValidateLifetime = true,
-            ValidIssuer = jwtOptions.Issuer,
-            ValidAudience = jwtOptions.Audience,
-            IssuerSigningKey = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(jwtOptions.SecretKey)),
-            ClockSkew = TimeSpan.Zero
-        };
-    });
+            options.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidateIssuerSigningKey = true,
+                ValidateLifetime = true,
+                ValidIssuer = jwtOptions.Issuer,
+                ValidAudience = jwtOptions.Audience,
+                IssuerSigningKey = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(jwtOptions.SecretKey)),
+                ClockSkew = TimeSpan.Zero
+            };
+        });
 
-builder.Services.AddAuthorization();
-builder.Services.AddSwaggerGen(options =>
-{
-    options.SwaggerDoc("v1", new OpenApiInfo
+    builder.Services.AddAuthorization();
+    builder.Services.AddSwaggerGen(options =>
     {
-        Title = "Eshop API",
-        Version = "v1",
-    });
+        options.SwaggerDoc("v1", new OpenApiInfo
+        {
+            Title = "Eshop API",
+            Version = "v1",
+        });
 
-    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+        options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+        {
+            Name = "Authorization",
+            Type = SecuritySchemeType.Http,
+            Scheme = "bearer",
+            BearerFormat = "JWT",
+            In = ParameterLocation.Header,
+            Description = "JWT Authorization header using the Bearer scheme. Example: {your token}"
+        });
+
+        options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
+        {
+            [new OpenApiSecuritySchemeReference("Bearer", document)] = []
+        });
+    });
+    var app = builder.Build();
+
+    app.UseRequestLoggingMiddleware();
+    app.UseCustomExceptionMiddleware();
+
+    // Configure the HTTP request pipeline.
+    if (app.Environment.IsDevelopment())
     {
-        Name = "Authorization",
-        Type = SecuritySchemeType.Http,
-        Scheme = "bearer",
-        BearerFormat = "JWT",
-        In = ParameterLocation.Header,
-        Description = "JWT Authorization header using the Bearer scheme. Example: {your token}"
-    });
+        //app.MapOpenApi();
+        app.UseSwagger();
+        app.UseSwaggerUI();
+    }
 
-    options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
-    {
-        [new OpenApiSecuritySchemeReference("Bearer", document)] = []
-    });
-});
-var app = builder.Build();
+    app.UseHttpsRedirection();
 
-app.UseCustomExceptionMiddleware();
+    app.UseAuthentication();
+    app.UseAuthorization();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    //app.MapOpenApi();
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    app.MapControllers();
+
+    app.Run();
 }
-
-app.UseHttpsRedirection();
-
-app.UseAuthentication();
-app.UseAuthorization();
-
-app.MapControllers();
-
-app.Run();
+catch (Exception ex)
+{
+    Log.Fatal(ex, "Application terminated unexpectedly.");
+}
+finally
+{
+    Log.CloseAndFlush();
+}

@@ -5,6 +5,7 @@ using Eshop.Application.Common.Exceptions;
 using Eshop.Application.Common.Interfaces;
 using Eshop.Domain.Entities;
 using Eshop.Domain.Repositories;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -17,18 +18,21 @@ namespace Eshop.Application.Carts.Services
         private readonly IProductRepository _productRepository;
         private readonly ICurrentUserService _currentUserService;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly ILogger _logger;
 
         public CartService(
             ICartRepository cartRepository,
             IProductRepository productRepository,
             ICurrentUserService currentUserService,
-            IUnitOfWork unitOfWork
+            IUnitOfWork unitOfWork,
+            ILogger logger
         )
         {
             _cartRepository = cartRepository;
             _productRepository = productRepository;
             _currentUserService = currentUserService;
             _unitOfWork = unitOfWork;
+            _logger = logger;
         }
 
         public async Task<CartResponse> AddToCartAsync(AddToCartRequest request)
@@ -39,6 +43,12 @@ namespace Eshop.Application.Carts.Services
             {
                 throw new BusinessException("Invalid product ID.");
             }
+
+            _logger.LogInformation(
+                "Adding product {ProductId} with quantity {Quantity} to cart for user {UserId}",
+                request.ProductId,
+                request.Quantity,
+                userId);
 
             var product = await _productRepository.GetProductByIdAsync(request.ProductId);
 
@@ -54,9 +64,13 @@ namespace Eshop.Application.Carts.Services
 
             if (product.StockQuantity < request.Quantity) 
             {
+                _logger.LogWarning(
+                    "Insufficient stock for product {ProductId} when user {UserId} attempted to add quantity {Quantity}",
+                    request.ProductId,
+                    userId,
+                    request.Quantity);
                 throw new BusinessException("Insufficient stock for the requested quantity.");
             }
-
             var cart = await _cartRepository.GetByUserIdWithItemsAndProductsAsync(userId);
             
             if (cart is null)
@@ -87,6 +101,12 @@ namespace Eshop.Application.Carts.Services
             else
             {
                 var newQuantity = existingItem.Quantity + request.Quantity;
+                _logger.LogInformation(
+                    "Product {ProductId} already exists in cart for user {UserId}. Increasing quantity from {OldQuantity} to {NewQuantity}",
+                    request.ProductId,
+                    userId,
+                    existingItem.Quantity,
+                    newQuantity);
 
                 if (product.StockQuantity < newQuantity)
                 {
@@ -177,7 +197,9 @@ namespace Eshop.Application.Carts.Services
         public async Task ClearMyCartAsync()
         {
             var userId = GetCurrentUserId();
-
+            _logger.LogInformation(
+                "Clearing cart for user {UserId}",
+                userId);
             var cart = await _cartRepository.GetCartByUserId(userId);
 
             if (cart is null)

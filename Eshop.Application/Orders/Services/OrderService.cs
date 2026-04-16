@@ -7,6 +7,7 @@ using Eshop.Application.Orders.Interfaces;
 using Eshop.Domain.Entities;
 using Eshop.Domain.Enums;
 using Eshop.Domain.Repositories;
+using Microsoft.Extensions.Logging;
 
 namespace Eshop.Application.Orders.Services
 {
@@ -17,13 +18,15 @@ namespace Eshop.Application.Orders.Services
         private readonly IOrderRepository _orderRepository;
         private readonly IProductRepository _productRepository;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly ILogger<OrderService> _logger;
 
         public OrderService(
             ICurrentUserService currentUserService,
             ICartRepository cartRepository,
             IOrderRepository orderRepository,
             IProductRepository productRepository,
-            IUnitOfWork unitOfWork
+            IUnitOfWork unitOfWork,
+            ILogger<OrderService> logger
             ) 
         {
             _currentUserService = currentUserService;
@@ -31,14 +34,19 @@ namespace Eshop.Application.Orders.Services
             _orderRepository = orderRepository;
             _productRepository = productRepository;
             _unitOfWork = unitOfWork;
+            _logger = logger;
         }
 
         public async Task<OrderResponse> CreateOrderAsync(CreateOrderRequest request)
         {
             var userId = GetCurrentUserId();
+            _logger.LogInformation("Creating order for user {UserId}", userId);
+
             var cart = await _cartRepository.GetByUserIdWithItemsAndProductsAsync(userId);
             if (cart is null || !cart.Items.Any())
             {
+                _logger.LogInformation(
+                    "Create order failed because the cart is empty for user {UserId}", userId);
                 throw new BusinessException("Cart is empty");
             }
 
@@ -110,11 +118,22 @@ namespace Eshop.Application.Orders.Services
                 await _unitOfWork.SaveChangesAsync();
                 await _unitOfWork.CommitAsync();
             }
-            catch
+            catch (Exception ex)
             {
                 await _unitOfWork.RollbackAsync();
+                _logger.LogError(
+                    ex,
+                    "Failed to create order for user {UserId}. OrderNumber: {OrderNumber}",
+                    userId,
+                    order.OrderNumber);
                 throw;
             }
+
+            _logger.LogInformation(
+                "Order {OrderNumber} created for user {UserId} with total amount {TotalAmount}",
+                order.OrderNumber,
+                userId,
+                order.TotalAmount);
 
             return new OrderResponse
             {
@@ -141,6 +160,7 @@ namespace Eshop.Application.Orders.Services
         {
             if (!_currentUserService.IsAuthenticated || _currentUserService.UserId is null)
             {
+                _logger.LogInformation("User is not valid");
                 throw new UnauthorizedException("Current user is not authenticated.");
             }
 
