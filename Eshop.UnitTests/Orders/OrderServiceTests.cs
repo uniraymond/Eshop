@@ -5,6 +5,7 @@ using Eshop.Application.Orders.Services;
 using Eshop.Domain.Entities;
 using Eshop.Domain.Repositories;
 using FluentAssertions;
+using Microsoft.Extensions.Logging;
 using Moq;
 using System;
 using System.Collections.Generic;
@@ -35,13 +36,15 @@ namespace Eshop.UnitTests.Orders
             var orderRepositoryMock = new Mock<IOrderRepository>();
             var productRepositoryMock = new Mock<IProductRepository>();
             var unitOfWorkMock = new Mock<IUnitOfWork>();
+            var mockLogger = new Mock<ILogger>();
 
             var service = new OrderService(
                 currentUserServiceMock.Object,
                 cartRepositoryMock.Object,
                 orderRepositoryMock.Object,
                 productRepositoryMock.Object,
-                unitOfWorkMock.Object
+                unitOfWorkMock.Object,
+                (ILogger<OrderService>)mockLogger.Object
                 );
 
             var request = new CreateOrderRequest
@@ -100,13 +103,15 @@ namespace Eshop.UnitTests.Orders
             var orderRepositoryMock = new Mock<IOrderRepository>();
 
             var unitOfWorkMock = new Mock<IUnitOfWork>();
+            var mockLogger = new Mock<ILogger>();
 
             var service = new OrderService(
                 currentUserServiceMock.Object,
                 cartRepositoryMock.Object,
                 orderRepositoryMock.Object,
                 productRepositoryMock.Object,
-                unitOfWorkMock.Object
+                unitOfWorkMock.Object,
+                (ILogger<OrderService>)mockLogger.Object
                 );
 
             var request = new CreateOrderRequest

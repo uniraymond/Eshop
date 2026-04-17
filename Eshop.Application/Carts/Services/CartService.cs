@@ -6,9 +6,6 @@ using Eshop.Application.Common.Interfaces;
 using Eshop.Domain.Entities;
 using Eshop.Domain.Repositories;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Eshop.Application.Carts.Services
 {

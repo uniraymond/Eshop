@@ -5,6 +5,7 @@ using Eshop.Application.Common.Interfaces;
 using Eshop.Domain.Entities;
 using Eshop.Domain.Repositories;
 using FluentAssertions;
+using Microsoft.Extensions.Logging;
 using Moq;
 
 namespace Eshop.UnitTests.Carts
@@ -21,12 +22,14 @@ namespace Eshop.UnitTests.Carts
             var cartRepositoryMock = new Mock<ICartRepository>();
             var productRepositoryMock = new Mock<IProductRepository>();
             var uniOfWrokMock = new Mock<IUnitOfWork>();
+            var mockLogger = new Mock<ILogger>();
 
             var cartService = new CartService(
                     cartRepositoryMock.Object,
                     productRepositoryMock.Object,
                     currentUserServiceMock.Object,
-                    uniOfWrokMock.Object
+                    uniOfWrokMock.Object,
+                    mockLogger.Object
                 );
 
             var request = new AddToCartRequest
@@ -57,11 +60,14 @@ namespace Eshop.UnitTests.Carts
                 .ReturnsAsync((Product?)null);
 
             var unitOfWorkMock = new Mock<IUnitOfWork>();
+            var mockLogger = new Mock<ILogger>();
+
             var service = new CartService(
                 cartRepositoryMock.Object,
                 productRepositoryMock.Object,
                 currentUserServiceMock.Object,
-                unitOfWorkMock.Object
+                unitOfWorkMock.Object,
+                    mockLogger.Object
                 );
 
             var request = new AddToCartRequest
@@ -99,12 +105,14 @@ namespace Eshop.UnitTests.Carts
 
             var cartRepositoryMock = new Mock<ICartRepository>();
             var unitOfWorkMock = new Mock<IUnitOfWork>();
+            var mockLogger = new Mock<ILogger>();
 
             var cartService = new CartService(
                     cartRepositoryMock.Object,
                     productRepositoryMock.Object,
                     currentUserServiceMock.Object,
-                    unitOfWorkMock.Object
+                    unitOfWorkMock.Object,
+                    mockLogger.Object
                 );
 
             var request = new AddToCartRequest
@@ -165,12 +173,14 @@ namespace Eshop.UnitTests.Carts
                 .ReturnsAsync(cart);
 
             var unitOfWorkMock = new Mock<IUnitOfWork>();
+            var mockLogger = new Mock<ILogger>();
 
             var service = new CartService(
                 cartRepositoryMock.Object,
                 productRepositoryMock.Object,
                 currentUserServiceMock.Object,
-                unitOfWorkMock.Object
+                unitOfWorkMock.Object,
+                    mockLogger.Object
                 );
 
             var request = new AddToCartRequest
