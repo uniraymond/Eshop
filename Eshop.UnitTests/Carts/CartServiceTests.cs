@@ -2,6 +2,7 @@
 using Eshop.Application.Carts.Services;
 using Eshop.Application.Common.Exceptions;
 using Eshop.Application.Common.Interfaces;
+using Eshop.Application.Products.Interfaces;
 using Eshop.Domain.Entities;
 using Eshop.Domain.Repositories;
 using FluentAssertions;
@@ -23,13 +24,15 @@ namespace Eshop.UnitTests.Carts
             var productRepositoryMock = new Mock<IProductRepository>();
             var uniOfWrokMock = new Mock<IUnitOfWork>();
             var mockLogger = new Mock<ILogger>();
+            var mockCacheService = new Mock<ICacheService>();
 
             var cartService = new CartService(
                     cartRepositoryMock.Object,
                     productRepositoryMock.Object,
                     currentUserServiceMock.Object,
                     uniOfWrokMock.Object,
-                    mockLogger.Object
+                    (ILogger<CartService>)mockLogger.Object,
+                    mockCacheService.Object
                 );
 
             var request = new AddToCartRequest
@@ -61,13 +64,15 @@ namespace Eshop.UnitTests.Carts
 
             var unitOfWorkMock = new Mock<IUnitOfWork>();
             var mockLogger = new Mock<ILogger>();
+            var mockCacheService = new Mock<ICacheService>();
 
             var service = new CartService(
                 cartRepositoryMock.Object,
                 productRepositoryMock.Object,
                 currentUserServiceMock.Object,
                 unitOfWorkMock.Object,
-                    mockLogger.Object
+                (ILogger<CartService>)mockLogger.Object,
+                mockCacheService.Object
                 );
 
             var request = new AddToCartRequest
@@ -106,13 +111,15 @@ namespace Eshop.UnitTests.Carts
             var cartRepositoryMock = new Mock<ICartRepository>();
             var unitOfWorkMock = new Mock<IUnitOfWork>();
             var mockLogger = new Mock<ILogger>();
+            var mockCacheService = new Mock<ICacheService>();
 
             var cartService = new CartService(
                     cartRepositoryMock.Object,
                     productRepositoryMock.Object,
                     currentUserServiceMock.Object,
                     unitOfWorkMock.Object,
-                    mockLogger.Object
+                    (ILogger<CartService>)mockLogger.Object,
+                    mockCacheService.Object
                 );
 
             var request = new AddToCartRequest
@@ -174,13 +181,15 @@ namespace Eshop.UnitTests.Carts
 
             var unitOfWorkMock = new Mock<IUnitOfWork>();
             var mockLogger = new Mock<ILogger>();
+            var mockCacheService = new Mock<ICacheService>();
 
             var service = new CartService(
                 cartRepositoryMock.Object,
                 productRepositoryMock.Object,
                 currentUserServiceMock.Object,
                 unitOfWorkMock.Object,
-                    mockLogger.Object
+                (ILogger<CartService>)mockLogger.Object,
+                mockCacheService.Object
                 );
 
             var request = new AddToCartRequest

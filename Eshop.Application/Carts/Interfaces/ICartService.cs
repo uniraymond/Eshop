@@ -10,5 +10,6 @@ namespace Eshop.Application.Carts.Interfaces
         Task<CartResponse> UpdateItemQuantityAsync(Guid cartItemId, UpdateCartItemQuantityRequest request);
         Task RemoveItemAsync(Guid cartItemId);
         Task ClearMyCartAsync();
+        Task<CartSummaryResponse> GetMyCartSummaryAsync();
     }
 }

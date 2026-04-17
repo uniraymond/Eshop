@@ -1,20 +1,27 @@
-﻿using Eshop.Application.Common.Exceptions;
+﻿using Eshop.Application.Common.Constants;
+using Eshop.Application.Common.Exceptions;
+using Eshop.Application.Common.Interfaces;
 using Eshop.Application.Common.Models;
 using Eshop.Application.Products.Contracts.Requests;
 using Eshop.Application.Products.Contracts.Response;
 using Eshop.Application.Products.Interfaces;
 using Eshop.Domain.Entities;
 using Eshop.Domain.Repositories;
+using Microsoft.Extensions.Logging;
 
 namespace Eshop.Application.Products.Services
 {
     public class ProductService : IProductService
     {
         private readonly IProductRepository _productRepository;
+        private readonly ILogger<ProductService> _logger;
+        private readonly ICacheService _cacheService;
 
-        public ProductService(IProductRepository productRepository)
+        public ProductService(IProductRepository productRepository, ILogger<ProductService> logger, ICacheService cacheService)
         {
             _productRepository = productRepository;
+            _logger = logger;
+            _cacheService = cacheService;
         }
 
         public async Task<ProductResponse> CreateAsync(CreateProductRequest request)
@@ -125,13 +132,23 @@ namespace Eshop.Application.Products.Services
 
         public async Task<ProductResponse> GetByIdAsync(Guid id)
         {
+            var cacheKey = CacheKeys.ProductDetail(id);
+            var cached = await _cacheService.GetAsync<ProductResponse>(cacheKey);
+            if (cached is not null)
+            {
+                _logger.LogInformation("Product detail cache hit for product {ProductId}", id);
+                return cached;
+            }
+
+            _logger.LogInformation("Product detail cache miss for product {ProductId}", id);
+
             var product = await _productRepository.GetProductWithCategoryById(id);
             if ( product is null )
             {
                 throw new NotFoundException("Product not found");
             }
 
-            return new ProductResponse
+            var response = new ProductResponse
             {
                 Id = product.Id,
                 CategoryId = product.CategoryId,
@@ -143,11 +160,30 @@ namespace Eshop.Application.Products.Services
                 Sku = product.Sku,
                 IsActive = product.IsActive
             };
+
+            await _cacheService.SetAsync(cacheKey, response, TimeSpan.FromMinutes(10));
+            return response;
         }
 
         public async Task<PagedResponse<ProductResponse>> GetPagedAsync(GetProductsRequest request)
         {
-            var keyword = request.Keyword;
+            var keyword = request.Keyword?.Trim() ?? "all";
+            var cacheKey = CacheKeys.ProudctList(
+                keyword,
+                request.CategoryId,
+                request.IsActive,
+                request.PageNumber,
+                request.PageSize);
+            var cached = await _cacheService.GetAsync<PagedResponse<ProductResponse>>(cacheKey);
+            if (cached is not null)
+            {
+                _logger.LogInformation("Product list cache hit for key {CacheKey}", cacheKey);
+                return cached;
+            }
+
+            _logger.LogInformation("Product list cache miss for key {CacheKey}", cacheKey);
+
+
             var categoryId = request.CategoryId;
             var isActive = request.IsActive;
             var pageNumber = request.PageNumber;
@@ -168,13 +204,16 @@ namespace Eshop.Application.Products.Services
                 IsActive = p.IsActive
             }).ToList();
 
-            return new PagedResponse<ProductResponse>
+            var result = new PagedResponse<ProductResponse>
             {
                 Items = products,
                 TotalCount = totalCount,
                 PageNumber = request.PageNumber,
                 PageSize = request.PageSize
             };
+
+            await _cacheService.SetAsync(cacheKey, result, TimeSpan.FromMinutes(5));
+            return result;
         }
     }
 }

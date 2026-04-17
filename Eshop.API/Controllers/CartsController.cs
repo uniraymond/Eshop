@@ -53,5 +53,12 @@ namespace Eshop.API.Controllers
             await _cartService.ClearMyCartAsync();
             return Ok(ApiResponse<object>.Ok(null, "Cart cleared successully."));
         }
+
+        [HttpGet("me/summary")]
+        public async Task<IActionResult> GetMyCartSummary()
+        {
+            var result = await _cartService.GetMyCartAsync();
+            return Ok(ApiResponse<object>.Ok(result));
+        }
     }
 }

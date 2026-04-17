@@ -1,6 +1,7 @@
 ﻿using Eshop.Application.Carts.Contracts.Requests;
 using Eshop.Application.Carts.Contracts.Responses;
 using Eshop.Application.Carts.Interfaces;
+using Eshop.Application.Common.Constants;
 using Eshop.Application.Common.Exceptions;
 using Eshop.Application.Common.Interfaces;
 using Eshop.Domain.Entities;
@@ -15,14 +16,16 @@ namespace Eshop.Application.Carts.Services
         private readonly IProductRepository _productRepository;
         private readonly ICurrentUserService _currentUserService;
         private readonly IUnitOfWork _unitOfWork;
-        private readonly ILogger _logger;
+        private readonly ILogger<CartService> _logger;
+        private readonly ICacheService _cacheService;
 
         public CartService(
             ICartRepository cartRepository,
             IProductRepository productRepository,
             ICurrentUserService currentUserService,
             IUnitOfWork unitOfWork,
-            ILogger logger
+            ILogger<CartService> logger,
+            ICacheService cacheService
         )
         {
             _cartRepository = cartRepository;
@@ -30,6 +33,7 @@ namespace Eshop.Application.Carts.Services
             _currentUserService = currentUserService;
             _unitOfWork = unitOfWork;
             _logger = logger;
+            _cacheService = cacheService;
         }
 
         public async Task<CartResponse> AddToCartAsync(AddToCartRequest request)
@@ -249,6 +253,32 @@ namespace Eshop.Application.Carts.Services
                 TotalItems = items.Sum(i => i.Quantity),
                 TotalPrice = items.Sum(i => i.LineTotal)
             };
+        }
+
+        public async Task<CartSummaryResponse> GetMyCartSummaryAsync()
+        {
+            var userId = GetCurrentUserId();
+            var cacheKey = CacheKeys.CartSummary(userId);
+
+            var cached = await _cacheService.GetAsync<CartSummaryResponse>(cacheKey);
+            if (cached is not null)
+            {
+                _logger.LogInformation("Cart summary cache hit for user {UserId}", userId);
+                return cached;
+            }
+
+            _logger.LogInformation("Cart summary cache miss for user {UserId}", userId);
+            var cart = await _cartRepository.GetByUserIdWithItemsAndProductsAsync(userId);
+
+            var response = new CartSummaryResponse
+            {
+                UserId = userId,
+                TotalItems = cart?.Items.Sum(c => c.Quantity) ?? 0,
+                TotalAmount = cart?.Items.Sum(c => c.UnitPrice * c.Quantity) ?? 0m,
+            };
+
+            await _cacheService.SetAsync(cacheKey, response, TimeSpan.FromMinutes(3));
+            return response;
         }
     }
 }

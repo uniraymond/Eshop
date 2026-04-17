@@ -19,6 +19,7 @@ namespace Eshop.Application.Orders.Services
         private readonly IProductRepository _productRepository;
         private readonly IUnitOfWork _unitOfWork;
         private readonly ILogger<OrderService> _logger;
+        private readonly ICacheService _cacheService;
 
         public OrderService(
             ICurrentUserService currentUserService,
@@ -26,7 +27,8 @@ namespace Eshop.Application.Orders.Services
             IOrderRepository orderRepository,
             IProductRepository productRepository,
             IUnitOfWork unitOfWork,
-            ILogger<OrderService> logger
+            ILogger<OrderService> logger,
+            ICacheService cacheService
             ) 
         {
             _currentUserService = currentUserService;
@@ -35,6 +37,7 @@ namespace Eshop.Application.Orders.Services
             _productRepository = productRepository;
             _unitOfWork = unitOfWork;
             _logger = logger;
+            _cacheService = cacheService;
         }
 
         public async Task<OrderResponse> CreateOrderAsync(CreateOrderRequest request)
