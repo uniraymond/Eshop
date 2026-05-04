@@ -27,5 +27,7 @@ namespace Eshop.Domain.Repositories
 
         Task<Order?> GetByIdForAdminAsync(Guid orderId);
         void Update(Order order);
+
+        Task<List<Order>> GetExpiredPendingOrdersAsync(DateTime expiredBefore);
     }
 }

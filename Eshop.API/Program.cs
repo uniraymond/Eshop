@@ -3,6 +3,9 @@ using Eshop.Application.DependencyInjection;
 using Eshop.Infrastructure.Data;
 using Eshop.Infrastructure.DependencyInjection;
 using Eshop.Infrastructure.Options;
+using Hangfire;
+using Hangfire.PostgreSql;
+using Hangfire.SqlServer;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -21,6 +24,24 @@ Log.Logger = new LoggerConfiguration()
 try
 {
     var builder = WebApplication.CreateBuilder(args);
+    var hangfireConnectionString = builder.Configuration["Hangfire:ConnectionString"];
+
+    builder.Services.AddHangfire(
+        config =>
+        {
+            config.SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+                .UseSimpleAssemblyNameTypeSerializer()
+                .UseRecommendedSerializerSettings()
+                .UsePostgreSqlStorage(options => 
+                    options.UseNpgsqlConnection(hangfireConnectionString), 
+                    new PostgreSqlStorageOptions
+                    {
+                        QueuePollInterval = TimeSpan.FromSeconds(15),
+                    });
+        }    
+    );
+
+    builder.Services.AddHangfireServer();
 
     builder.Host.UseSerilog((context, services, configuration) =>
     {
@@ -46,12 +67,7 @@ try
         .GetSection(JwtOptions.SectionName)
         .Get<JwtOptions>() ?? throw new InvalidOperationException("Jwt settings are missing.");
 
-    builder.Services.Configure<JwtOptions>(
-        builder.Configuration.GetSection("Jwt"));
-
-    Console.WriteLine("Environment: " + builder.Environment.EnvironmentName);
-    Console.WriteLine("Jwt:SecretKey => " + builder.Configuration["Jwt:SecretKey"]);
-
+    builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("Jwt"));
 
     builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         .AddJwtBearer(options =>
@@ -97,6 +113,8 @@ try
 
     app.UseRequestLoggingMiddleware();
     app.UseCustomExceptionMiddleware();
+    app.UseHangfireDashboard("/hangfire");
+    app.RegisterRecurringJobs();
 
     // Configure the HTTP request pipeline.
     if (app.Environment.IsDevelopment())

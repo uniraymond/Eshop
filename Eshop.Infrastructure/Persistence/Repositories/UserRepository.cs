@@ -1,5 +1,5 @@
 ﻿using Eshop.Domain.Entities;
-using Eshop.Application.Common.Interfaces;
+using Eshop.Domain.Repositories;
 using Eshop.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 

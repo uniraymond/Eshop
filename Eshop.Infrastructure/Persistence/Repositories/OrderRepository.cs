@@ -99,5 +99,12 @@ namespace Eshop.Infrastructure.Persistence.Repositories
         {
             _appDbContext.Orders.Update(order);
         }
+
+        public async Task<List<Order>> GetExpiredPendingOrdersAsync(DateTime expiredBefore)
+        {
+            return await _appDbContext.Orders
+                .Where(o => o.Status == OrderStatus.Pending && o.CreatedAt <= expiredBefore)
+                .ToListAsync();
+        }
     }
 }

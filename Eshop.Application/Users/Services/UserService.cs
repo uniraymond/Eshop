@@ -7,6 +7,7 @@ using Eshop.Application.Auth.Contracts.Responses;
 using Eshop.Application.Auth.Contracts.Requests;
 using Eshop.Application.Auth.Interfaces;
 using Eshop.Application.Common.Exceptions;
+using Eshop.Domain.Repositories;
 
 namespace Eshop.Application.Users.Services
 {

@@ -1,7 +1,7 @@
 ﻿using Eshop.Application.Auth.Interfaces;
-using Eshop.Application.Carts.Interfaces;
+using Eshop.Application.BackgroundJobs.Interfaces;
+using Eshop.Application.BackgroundJobs.Services;
 using Eshop.Application.Common.Interfaces;
-using Eshop.Application.Products.Interfaces;
 using Eshop.Domain.Repositories;
 using Eshop.Infrastructure.Authentication;
 using Eshop.Infrastructure.Caching;
@@ -23,11 +23,19 @@ namespace Eshop.Infrastructure.DependencyInjection
         {
             var connectionString = configuration.GetConnectionString("DefaultConnection");
 
+            var redisOptions = configuration.GetSection(RedisOptions.SectionName).Get<RedisOptions>();
+            if (redisOptions == null)
+            {
+                redisOptions = new RedisOptions();
+            }
+            services.AddSingleton(redisOptions);
+
             services.Configure<JwtOptions>(configuration.GetSection(JwtOptions.SectionName));
             services.Configure<RedisOptions>(configuration.GetSection(RedisOptions.SectionName));
 
             services.AddDbContext<AppDbContext>(options =>
                 options.UseNpgsql(connectionString));
+
 
             services.AddSingleton<IConnectionMultiplexer>(sp =>
             {
@@ -46,6 +54,8 @@ namespace Eshop.Infrastructure.DependencyInjection
             services.AddScoped<IOrderRepository, OrderRepository>();
             services.AddScoped<IUnitOfWork, UnitOfWork>();
             services.AddScoped<IPaymentRepository, PaymentRepository>();
+            services.AddScoped<IOrderBackgroundJobService, OrderBackgroundJobService>();
+            services.AddScoped<ILogCleanupJobService, LogCleanupJobService>();
 
             return services;
         }

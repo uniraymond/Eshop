@@ -1,6 +1,6 @@
 ﻿using Eshop.Domain.Entities;
 
-namespace Eshop.Application.Common.Interfaces
+namespace Eshop.Domain.Repositories
 {
     public interface IUserRepository
     {
