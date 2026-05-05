@@ -6,6 +6,8 @@ using Eshop.Domain.Repositories;
 using Eshop.Infrastructure.Authentication;
 using Eshop.Infrastructure.Caching;
 using Eshop.Infrastructure.Data;
+using Eshop.Infrastructure.Messaging;
+using Eshop.Infrastructure.Messaging.Consumers;
 using Eshop.Infrastructure.Options;
 using Eshop.Infrastructure.Persistence.Repositories;
 using Eshop.Infrastructure.Security;
@@ -32,6 +34,7 @@ namespace Eshop.Infrastructure.DependencyInjection
 
             services.Configure<JwtOptions>(configuration.GetSection(JwtOptions.SectionName));
             services.Configure<RedisOptions>(configuration.GetSection(RedisOptions.SectionName));
+            services.Configure<RabbitMQOptions>(configuration.GetSection(RabbitMQOptions.SectionName));
 
             services.AddDbContext<AppDbContext>(options =>
                 options.UseNpgsql(connectionString));
@@ -56,6 +59,9 @@ namespace Eshop.Infrastructure.DependencyInjection
             services.AddScoped<IPaymentRepository, PaymentRepository>();
             services.AddScoped<IOrderBackgroundJobService, OrderBackgroundJobService>();
             services.AddScoped<ILogCleanupJobService, LogCleanupJobService>();
+
+            services.AddScoped<IEventBus, RabbitMQEventBus>();
+            services.AddHostedService<OrderCreatedConsumer>();
 
             return services;
         }

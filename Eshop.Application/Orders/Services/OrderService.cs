@@ -1,4 +1,5 @@
-﻿using Eshop.Application.Common.Exceptions;
+﻿using Eshop.Application.Common.Envents;
+using Eshop.Application.Common.Exceptions;
 using Eshop.Application.Common.Interfaces;
 using Eshop.Application.Common.Models;
 using Eshop.Application.Orders.Contracts.Requests;
@@ -20,6 +21,7 @@ namespace Eshop.Application.Orders.Services
         private readonly IUnitOfWork _unitOfWork;
         private readonly ILogger<OrderService> _logger;
         private readonly ICacheService _cacheService;
+        private readonly IEventBus _eventBus;
 
         public OrderService(
             ICurrentUserService currentUserService,
@@ -28,7 +30,8 @@ namespace Eshop.Application.Orders.Services
             IProductRepository productRepository,
             IUnitOfWork unitOfWork,
             ILogger<OrderService> logger,
-            ICacheService cacheService
+            ICacheService cacheService,
+            IEventBus eventBus
             ) 
         {
             _currentUserService = currentUserService;
@@ -38,6 +41,7 @@ namespace Eshop.Application.Orders.Services
             _unitOfWork = unitOfWork;
             _logger = logger;
             _cacheService = cacheService;
+            _eventBus = eventBus;
         }
 
         public async Task<OrderResponse> CreateOrderAsync(CreateOrderRequest request)
@@ -120,6 +124,15 @@ namespace Eshop.Application.Orders.Services
                 await _cartRepository.UpdateCartAsync(cart);
                 await _unitOfWork.SaveChangesAsync();
                 await _unitOfWork.CommitAsync();
+
+                await _eventBus.PublishAsync("order.created", new OrderCreatedEvent
+                {
+                    OrderId = order.Id,
+                    UserId = order.UserId,
+                    OrderNumber = order.OrderNumber,
+                    TotalAmount = order.TotalAmount,
+                    CreatedAt = order.CreatedAt
+                });
             }
             catch (Exception ex)
             {
