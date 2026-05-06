@@ -1,4 +1,6 @@
-﻿using Eshop.Application.Carts.Interfaces;
+﻿using Eshop.Application.BackgroundJobs.Interfaces;
+using Eshop.Application.BackgroundJobs.Services;
+using Eshop.Application.Carts.Interfaces;
 using Eshop.Application.Carts.Services;
 using Eshop.Application.Common.Interfaces;
 using Eshop.Application.Orders.Interfaces;
@@ -21,6 +23,7 @@ namespace Eshop.Application.DependencyInjection
             services.AddScoped<ICategoryService, CategoryService>();
             services.AddScoped<ICartService, CartService>();
             services.AddScoped<IOrderService, OrderService>();
+            services.AddScoped<IOutboxProcessor, OutboxProcessor>();
 
             return services;
         }

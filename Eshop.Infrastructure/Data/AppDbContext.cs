@@ -22,6 +22,7 @@ namespace Eshop.Infrastructure.Data
         public DbSet<Order> Orders => Set<Order>();
         public DbSet<OrderItem> OrderItems => Set<OrderItem>();
         public DbSet<Payment> Payments => Set<Payment>();
+        public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -146,6 +147,16 @@ namespace Eshop.Infrastructure.Data
                 entity.HasOne(x => x.Order)
                     .WithMany(x => x.Payments)
                     .HasForeignKey(x => x.OrderId);
+            });
+
+            modelBuilder.Entity<OutboxMessage>(entity =>
+            {
+                entity.HasKey(om => om.Id);
+                entity.Property(om => om.Type).HasMaxLength(500).IsRequired();
+                entity.Property(om => om.Content).IsRequired();
+                entity.Property(om => om.Error).HasMaxLength(2000);
+                entity.HasIndex(om => om.ProcessedAt);
+                entity.HasIndex(om => om.OccurredAt);
             });
         }
     }

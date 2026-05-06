@@ -46,6 +46,8 @@ namespace Eshop.Infrastructure.DependencyInjection
                 return ConnectionMultiplexer.Connect(redisOptions.ConnectionString);
             });
 
+            services.AddSingleton(sp => sp.GetRequiredService<IOptions<RabbitMQOptions>>().Value);
+
             services.AddScoped<ICacheService, RedisCacheService>();
 
             services.AddScoped<IPasswordHasher, PasswordHasher>();
@@ -59,6 +61,7 @@ namespace Eshop.Infrastructure.DependencyInjection
             services.AddScoped<IPaymentRepository, PaymentRepository>();
             services.AddScoped<IOrderBackgroundJobService, OrderBackgroundJobService>();
             services.AddScoped<ILogCleanupJobService, LogCleanupJobService>();
+            services.AddScoped<IOutboxMessageRepository, OutboxMessageRepository>();
 
             services.AddScoped<IEventBus, RabbitMQEventBus>();
             services.AddHostedService<OrderCreatedConsumer>();

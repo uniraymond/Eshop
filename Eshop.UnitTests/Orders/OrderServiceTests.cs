@@ -38,6 +38,8 @@ namespace Eshop.UnitTests.Orders
             var unitOfWorkMock = new Mock<IUnitOfWork>();
             var mockLogger = new Mock<ILogger>();
             var mockCache = new Mock<ICacheService>();
+            var mockEventBus = new Mock<IEventBus>();
+            var mockOutboxMessageRepository = new Mock<IOutboxMessageRepository>();
 
             var service = new OrderService(
                 currentUserServiceMock.Object,
@@ -46,7 +48,9 @@ namespace Eshop.UnitTests.Orders
                 productRepositoryMock.Object,
                 unitOfWorkMock.Object,
                 (ILogger<OrderService>)mockLogger.Object,
-                mockCache.Object
+                mockCache.Object,
+                mockEventBus.Object,
+                mockOutboxMessageRepository.Object
                 );
 
             var request = new CreateOrderRequest
@@ -107,6 +111,8 @@ namespace Eshop.UnitTests.Orders
             var unitOfWorkMock = new Mock<IUnitOfWork>();
             var mockLogger = new Mock<ILogger>();
             var mockCache = new Mock<ICacheService>();
+            var mockEventBus = new Mock<IEventBus>();
+            var mockOutboxMessageRepository = new Mock<IOutboxMessageRepository>();
 
             var service = new OrderService(
                 currentUserServiceMock.Object,
@@ -115,7 +121,9 @@ namespace Eshop.UnitTests.Orders
                 productRepositoryMock.Object,
                 unitOfWorkMock.Object,
                 (ILogger<OrderService>)mockLogger.Object,
-                mockCache.Object
+                mockCache.Object,
+                mockEventBus.Object,
+                mockOutboxMessageRepository.Object
                 );
 
             var request = new CreateOrderRequest

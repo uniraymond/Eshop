@@ -11,12 +11,12 @@ namespace Eshop.Infrastructure.Messaging
 {
     public class RabbitMQEventBus : IEventBus
     {
-        private readonly RabbitMQOptions _rabbitMQOptions;
+        private readonly RabbitMQOptions _options;
         private readonly ILogger<RabbitMQEventBus> _logger;
 
-        public RabbitMQEventBus(RabbitMQOptions rabbitMQOptions, ILogger<RabbitMQEventBus> logger)
+        public RabbitMQEventBus(RabbitMQOptions options, ILogger<RabbitMQEventBus> logger)
         {
-            _rabbitMQOptions = rabbitMQOptions;
+            _options = options;
             _logger = logger;
         }
 
@@ -24,18 +24,18 @@ namespace Eshop.Infrastructure.Messaging
         {
             var factory = new ConnectionFactory
             {
-                HostName = _rabbitMQOptions.HostName,
-                Port = _rabbitMQOptions.Port,
-                UserName = _rabbitMQOptions.UserName,
-                Password = _rabbitMQOptions.Password,
-                VirtualHost = _rabbitMQOptions.VirtualHost
+                HostName = _options.HostName,
+                Port = _options.Port,
+                UserName = _options.UserName,
+                Password = _options.Password,
+                VirtualHost = _options.VirtualHost
             };
 
             using var connection = await factory.CreateConnectionAsync("Eshop.Publisher");
             using var channel = await connection.CreateChannelAsync();
 
             await channel.ExchangeDeclareAsync(
-                exchange: _rabbitMQOptions.ExchangeName, 
+                exchange: _options.ExchangeName, 
                 type: ExchangeType.Direct, 
                 durable: true,
                 autoDelete: false);
@@ -49,7 +49,7 @@ namespace Eshop.Infrastructure.Messaging
             };
 
             await channel.BasicPublishAsync(
-                exchange: _rabbitMQOptions.ExchangeName,
+                exchange: _options.ExchangeName,
                 routingKey: routingKey,
                 mandatory: true,
                 basicProperties: properties,

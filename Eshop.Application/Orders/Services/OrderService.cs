@@ -9,6 +9,7 @@ using Eshop.Domain.Entities;
 using Eshop.Domain.Enums;
 using Eshop.Domain.Repositories;
 using Microsoft.Extensions.Logging;
+using System.Text.Json;
 
 namespace Eshop.Application.Orders.Services
 {
@@ -22,6 +23,7 @@ namespace Eshop.Application.Orders.Services
         private readonly ILogger<OrderService> _logger;
         private readonly ICacheService _cacheService;
         private readonly IEventBus _eventBus;
+        private readonly IOutboxMessageRepository _outboxMessageRepository;
 
         public OrderService(
             ICurrentUserService currentUserService,
@@ -31,7 +33,8 @@ namespace Eshop.Application.Orders.Services
             IUnitOfWork unitOfWork,
             ILogger<OrderService> logger,
             ICacheService cacheService,
-            IEventBus eventBus
+            IEventBus eventBus,
+            IOutboxMessageRepository outboxMessageRepository
             ) 
         {
             _currentUserService = currentUserService;
@@ -42,6 +45,7 @@ namespace Eshop.Application.Orders.Services
             _logger = logger;
             _cacheService = cacheService;
             _eventBus = eventBus;
+            _outboxMessageRepository = outboxMessageRepository;
         }
 
         public async Task<OrderResponse> CreateOrderAsync(CreateOrderRequest request)
@@ -115,24 +119,43 @@ namespace Eshop.Application.Orders.Services
 
             try
             {
-                await _unitOfWork.BeginTransactionAsync();
-                await _orderRepository.AddAsync(order);
-                await _productRepository.UpdateRangeAsync(products);
-                await _cartRepository.RemoveItemsAsync(cart.Items);
-
-                cart.UpdatedAt = DateTime.UtcNow;
-                await _cartRepository.UpdateCartAsync(cart);
-                await _unitOfWork.SaveChangesAsync();
-                await _unitOfWork.CommitAsync();
-
-                await _eventBus.PublishAsync("order.created", new OrderCreatedEvent
+                var orderCreatedEvent = new OrderCreatedEvent
                 {
                     OrderId = order.Id,
                     UserId = order.UserId,
                     OrderNumber = order.OrderNumber,
                     TotalAmount = order.TotalAmount,
                     CreatedAt = order.CreatedAt
-                });
+                };
+
+                var outboxMessage = new OutboxMessage
+                { 
+                    Id = Guid.NewGuid(),
+                    Type = nameof(OrderCreatedEvent),
+                    Content = JsonSerializer.Serialize(orderCreatedEvent),
+                    OccurredAt = DateTime.UtcNow
+                };
+
+                await _unitOfWork.BeginTransactionAsync();
+                await _orderRepository.AddAsync(order);
+                await _productRepository.UpdateRangeAsync(products);
+                await _cartRepository.RemoveItemsAsync(cart.Items);
+
+                await _outboxMessageRepository.AddAsync(outboxMessage);
+
+                cart.UpdatedAt = DateTime.UtcNow;
+                await _cartRepository.UpdateCartAsync(cart);
+                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.CommitAsync();
+
+                //await _eventBus.PublishAsync("order.created", new OrderCreatedEvent
+                //{
+                //    OrderId = order.Id,
+                //    UserId = order.UserId,
+                //    OrderNumber = order.OrderNumber,
+                //    TotalAmount = order.TotalAmount,
+                //    CreatedAt = order.CreatedAt
+                //});
             }
             catch (Exception ex)
             {
